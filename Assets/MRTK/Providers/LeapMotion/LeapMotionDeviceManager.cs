@@ -115,6 +115,7 @@ namespace Microsoft.MixedReality.Toolkit.LeapMotion.Input
 
         private static readonly ProfilerMarker UpdatePerfMarker = new ProfilerMarker("[MRTK] LeapMotionDeviceManager.Update");
 
+        private LeapXRServiceProvider LMXRProvider;
         /// <inheritdoc />
         public override void Enable()
         {
@@ -124,7 +125,9 @@ namespace Microsoft.MixedReality.Toolkit.LeapMotion.Input
             {
                 // If the leap controller is mounted on a headset then add the LeapXRServiceProvider to the scene
                 // The LeapXRServiceProvider can only be attached to a camera 
-                LeapMotionServiceProvider = CameraCache.Main.gameObject.AddComponent<LeapXRServiceProvider>();
+                //LeapMotionServiceProvider = CameraCache.Main.gameObject.AddComponent<LeapXRServiceProvider>();
+                LeapMotionServiceProvider = GameObject.Find("Leap Provider").GetComponent<LeapXRServiceProvider>();
+
             }
 
             if (leapControllerOrientation == LeapControllerOrientation.Desk)
