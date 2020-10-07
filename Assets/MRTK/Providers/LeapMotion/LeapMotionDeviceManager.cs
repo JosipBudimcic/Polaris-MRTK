@@ -43,7 +43,7 @@ namespace Microsoft.MixedReality.Toolkit.LeapMotion.Input
             BaseMixedRealityProfile profile = null) : base(inputSystem, name, priority, profile) { }
 
 
-#region IMixedRealityCapabilityCheck Implementation
+        #region IMixedRealityCapabilityCheck Implementation
 
         /// <inheritdoc />
         public bool CheckCapability(MixedRealityCapability capability)
@@ -53,7 +53,7 @@ namespace Microsoft.MixedReality.Toolkit.LeapMotion.Input
         }
 
 
-#endregion IMixedRealityCapabilityCheck Implementation
+        #endregion IMixedRealityCapabilityCheck Implementation
 #if LEAPMOTIONCORE_PRESENT
 
         /// <summary>
@@ -115,6 +115,133 @@ namespace Microsoft.MixedReality.Toolkit.LeapMotion.Input
 
         private static readonly ProfilerMarker UpdatePerfMarker = new ProfilerMarker("[MRTK] LeapMotionDeviceManager.Update");
 
+
+        [System.Serializable]
+        public class Calibration
+        {
+            public bool alwaysActivate;
+            public string name;
+            public string directory;
+            public bool resourceOnly;
+            public string[] hmd_presence;
+            public Display display;
+            public Lefteye leftEye;
+            public Righteye rightEye;
+            public Leaptrackerodometryorigin leapTrackerOdometryOrigin;
+        }
+        [System.Serializable]
+        public class Display
+        {
+            public int originX;
+            public int originY;
+            public int width;
+            public int height;
+            public int renderWidth;
+            public int renderHeight;
+            public int frequency;
+            public float ipd;
+            public float photonLatency;
+        }
+        [System.Serializable]
+        public class Lefteye
+        {
+            public float ellipseMinorAxis;
+            public float ellipseMajorAxis;
+            public float screenForward_x;
+            public float screenForward_y;
+            public float screenForward_z;
+            public float screenPosition_x;
+            public float screenPosition_y;
+            public float screenPosition_z;
+            public float eyePosition_x;
+            public float eyePosition_y;
+            public float eyePosition_z;
+            public float cameraProjection_x;
+            public float cameraProjection_y;
+            public float cameraProjection_z;
+            public float cameraProjection_w;
+            public float sphereToWorldSpace_e00;
+            public float sphereToWorldSpace_e01;
+            public float sphereToWorldSpace_e02;
+            public float sphereToWorldSpace_e03;
+            public float sphereToWorldSpace_e10;
+            public float sphereToWorldSpace_e11;
+            public float sphereToWorldSpace_e12;
+            public float sphereToWorldSpace_e13;
+            public float sphereToWorldSpace_e20;
+            public float sphereToWorldSpace_e21;
+            public float sphereToWorldSpace_e22;
+            public float sphereToWorldSpace_e23;
+            public float worldToScreenSpace_e00;
+            public float worldToScreenSpace_e01;
+            public float worldToScreenSpace_e02;
+            public float worldToScreenSpace_e03;
+            public float worldToScreenSpace_e10;
+            public float worldToScreenSpace_e11;
+            public float worldToScreenSpace_e12;
+            public float worldToScreenSpace_e13;
+            public float worldToScreenSpace_e20;
+            public float worldToScreenSpace_e21;
+            public float worldToScreenSpace_e22;
+            public float worldToScreenSpace_e23;
+        }
+        [System.Serializable]
+        public class Righteye
+        {
+            public float ellipseMinorAxis;
+            public float ellipseMajorAxis;
+            public float screenForward_x;
+            public float screenForward_y;
+            public float screenForward_z;
+            public float screenPosition_x;
+            public float screenPosition_y;
+            public float screenPosition_z;
+            public float eyePosition_x;
+            public float eyePosition_y;
+            public float eyePosition_z;
+            public float cameraProjection_x;
+            public float cameraProjection_y;
+            public float cameraProjection_z;
+            public float cameraProjection_w;
+            public float sphereToWorldSpace_e00;
+            public float sphereToWorldSpace_e01;
+            public float sphereToWorldSpace_e02;
+            public float sphereToWorldSpace_e03;
+            public float sphereToWorldSpace_e10;
+            public float sphereToWorldSpace_e11;
+            public float sphereToWorldSpace_e12;
+            public float sphereToWorldSpace_e13;
+            public float sphereToWorldSpace_e20;
+            public float sphereToWorldSpace_e21;
+            public float sphereToWorldSpace_e22;
+            public float sphereToWorldSpace_e23;
+            public float worldToScreenSpace_e00;
+            public float worldToScreenSpace_e01;
+            public float worldToScreenSpace_e02;
+            public float worldToScreenSpace_e03;
+            public float worldToScreenSpace_e10;
+            public float worldToScreenSpace_e11;
+            public float worldToScreenSpace_e12;
+            public float worldToScreenSpace_e13;
+            public float worldToScreenSpace_e20;
+            public float worldToScreenSpace_e21;
+            public float worldToScreenSpace_e22;
+            public float worldToScreenSpace_e23;
+        }
+        [System.Serializable]
+        public class Leaptrackerodometryorigin
+        {
+            public float position_x;
+            public float position_y;
+            public float position_z;
+            public float rotation_x;
+            public float rotation_y;
+            public float rotation_z;
+            public float rotation_w;
+        }
+
+
+
         /// <inheritdoc />
         public override void Enable()
         {
@@ -125,6 +252,49 @@ namespace Microsoft.MixedReality.Toolkit.LeapMotion.Input
                 // If the leap controller is mounted on a headset then add the LeapXRServiceProvider to the scene
                 // The LeapXRServiceProvider can only be attached to a camera 
                 LeapMotionServiceProvider = CameraCache.Main.gameObject.AddComponent<LeapXRServiceProvider>();
+                //If northstar driver is installed, we need to get the LeapOffset values from the .vrsettings file
+                //LeapMotionServiceProvider.GetComponent<LeapXRServiceProvider>().deviceOffsetMode = Leap.Unity.LeapXRServiceProvider.DeviceOffsetMode.Transform;
+                //private Transform LeapOrigin = GetLeapOffset();
+                //LeapMotionServiceProvider.GetComponent<LeapXRServiceProvider>().deviceOrigin = LeapOrigin
+                //private Transform LeapOrigin = 0;
+                //C:\Program Files (x86)\Steam\steamapps\common\SteamVR\drivers\northstar\resources\settings\default.vrsettings
+                string path = @"c:\Program Files (x86)\Steam\steamapps\common\SteamVR\drivers\northstar\resources\settings\default.vrsettings";
+                //path = "";
+
+                if (System.IO.File.Exists(path))
+                {
+                    //Check if we have a valid calibration to read
+                    Debug.Log(path + "exists");
+                    //Create game object to apply sensor offset
+                    GameObject leapProvider = new GameObject("LeapProvider");
+                    //Read in data from calibration file
+                    string headsetsettings = System.IO.File.ReadAllText(path);
+                    Debug.Log(headsetsettings);
+                    //Parse data
+                    
+                    Calibration headset = JsonUtility.FromJson<Calibration>(headsetsettings);
+
+                    Leaptrackerodometryorigin leapoffset = headset.leapTrackerOdometryOrigin;
+
+                    Debug.Log("headset : --" + headset.leapTrackerOdometryOrigin);
+
+                    Vector3 leapposition = new Vector3(leapoffset.position_x, leapoffset.position_y, leapoffset.position_z);
+                    Quaternion leaprotation = new Quaternion(leapoffset.rotation_x, leapoffset.rotation_y, leapoffset.rotation_z, leapoffset.rotation_w);
+                    //Apply leap offset
+                    Leap.Unity.Pose pose = new Leap.Unity.Pose(leapposition, leaprotation);
+                    leapProvider.transform.SetLocalPose(pose);
+
+                    LeapMotionServiceProvider.GetComponent<LeapXRServiceProvider>().deviceOrigin = leapProvider.transform;
+                    LeapMotionServiceProvider.GetComponent<LeapXRServiceProvider>().deviceOffsetMode = Leap.Unity.LeapXRServiceProvider.DeviceOffsetMode.Transform;
+                    Debug.Log("Applied Leap Offset from North Star vrsettings");
+                }
+                else
+                {
+                    Debug.Log(path + " not found, setting default Leap Offset");
+                    LeapMotionServiceProvider = CameraCache.Main.gameObject.AddComponent<LeapXRServiceProvider>();
+                }
+
+
             }
 
             if (leapControllerOrientation == LeapControllerOrientation.Desk)
@@ -215,7 +385,7 @@ namespace Microsoft.MixedReality.Toolkit.LeapMotion.Input
                 {
                     leapHand.SetAttachmentHands(rightAttachmentHand, LeapMotionServiceProvider);
                 }
-                
+
                 // Set the pointers for an articulated hand to the leap hand
                 foreach (var pointer in pointers)
                 {
@@ -257,7 +427,7 @@ namespace Microsoft.MixedReality.Toolkit.LeapMotion.Input
             if (isLeftTracked && !trackedHands.ContainsKey(Handedness.Left))
             {
                 OnHandDetected(Handedness.Left);
-            }            
+            }
             else if (!isLeftTracked && trackedHands.ContainsKey(Handedness.Left))
             {
                 OnHandDetectionLost(Handedness.Left);
